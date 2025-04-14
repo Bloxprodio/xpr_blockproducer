@@ -3,8 +3,14 @@
 ################################################################################
 # XPR Network node restart by Bloxprod.io
 ################################################################################
-# This script is a restart for a block producer in a main or test network.
-# Its primary function is to ensure that the nodeos service of block producer is not interupted during block producing
+# Script Name: example_script.sh
+# Version: v0.9
+# Author: bloxprod.io
+# Date: 2025-04-13
+#
+# Description:
+# This script is restarts XPR block producer (nodeos node) in a main or test network.
+# Its primary function is to ensure that the nodeos service of configured block producer is not interupted during block producing
 # --------------------------------------
 # change log
 # v0.9 - 2025-04-01 - initial version
@@ -13,38 +19,60 @@
 # Usage:
 # ./node_restart.sh <parameter1>
 #
+# Dependencies:
+# 1. script requires XPR/Nodeos scripts in NODEOS_DIR
+#	1.1 stop.sh
+#	1.2 start.sh
+# 2. ssmtp has to available
+# 	2.1 apt install ssmtp
+# 	2.2 add your SMTP server details to /etc/ssmtp/ssmtp.config
+# 	2.3 define sender addresses for user in /etc/ssmtp/revaliases 
+#
 # Parameters:
-#   test - if script is started in test mode, the restart of node is skipped
+#   <parameter1> - test (if script is started in test mode, the restart of node will be skipped)
 #
 # Example:
 # ./node_restart.sh test
+#
+# before starting script, check values and settings of section "variable definition"
 ################################################################################
 
 
 
 ####################### start variable definition #######################
 
-# set the network for which the Nodeos node works (TestNet | MainNet)
+### set the network for which the Nodeos node works (TestNet | MainNet)
 XPR_NET=TestNet
 
-# server endpoint for v1/chain/get_producer_schedule
+### server endpoint for v1/chain/get_producer_schedule
 SERVER_URL_TESTNET="https://xpr-testnet-api.bloxprod.io"
 SERVER_URL_MAINNET="https://xpr-mainnet-api.bloxprod.io"
 
-# path und filenames
+### path und filenames
+# nodeos base dir
 NODEOS_DIR="/opt/XPR$XPR_NET/xprNode"
+# node config file
 NODEOS_CONFIG_FILE="$NODEOS_DIR/config.ini"
+# node log file
 NODEOS_LOG_FILE="$NODEOS_DIR/stderr.txt"
+# log file to log script activities
 RESTART_LOG_FILE="$NODEOS_DIR/restart_logfile.log"
+# temp file to generate outgoinfg mail body
 MAIL_TEMP_FILE="$NODEOS_DIR/restart_mail_tempfile.txt"
 
-# E-Mail parameters
-# in case of unexpected error - send mail
+### E-Mail parameters
+## parameters to send e-mails in case of errors
+## 
+# receiver e-mail
 EMAIL_RECEIVER="rcv_mail@example.com"
 EMAIL_SENDER="rcv_mail@example.com"
 EMAIL_SUBJECT="error on $XPR_NET with BP $LOCAL_PRODUCER"
 
 ####################### end variable definition #######################
+
+
+
+
 echo "##############################################"
 # local block producer name
 LOCAL_PRODUCER=$(grep -E "producer-name\s*=" "$NODEOS_CONFIG_FILE" | cut -d '=' -f2 | tr -d ' ')
