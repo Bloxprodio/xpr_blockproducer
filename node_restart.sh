@@ -51,7 +51,7 @@
 # Example:
 # ./node_restart.sh test
 #
-# before starting script, check values and settings of section "variable definition"
+# 
 ################################################################################
 
 
