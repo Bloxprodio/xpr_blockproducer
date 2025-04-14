@@ -10,7 +10,7 @@
 #
 # Description:
 # This script is restarts XPR block producer (nodeos node) in a main or test network.
-# Its primary function is to ensure that the nodeos service of configured block producer is not interupted during block producing
+# Its main function is to ensure that the nodeos service (block producer) can be restarted while it is not in block production.
 # --------------------------------------
 # change log
 # v0.9 - 2025-04-01 - initial version
