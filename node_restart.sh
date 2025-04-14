@@ -4,9 +4,9 @@
 # XPR Network node restart by Bloxprod.io
 ################################################################################
 # Script Name: example_script.sh
-# Version: v0.9
+# Version: v0.9.1
 # Author: bloxprod.io
-# Date: 2025-04-13
+# Date: 2025-04-14
 #
 # Description:
 # This script is restarts XPR block producer (nodeos node) in a main or test network.
@@ -14,6 +14,7 @@
 # --------------------------------------
 # change log
 # v0.9 - 2025-04-01 - initial version
+# v0.9.1 - 2025-04-14 - comment changes
 #
 # --------------------------------------
 # Usage:
@@ -23,12 +24,28 @@
 # 1. script requires XPR/Nodeos scripts in NODEOS_DIR
 #	1.1 stop.sh
 #	1.2 start.sh
-# 2. ssmtp has to available
+#
+# 2. install and configure ssmtp
 # 	2.1 apt install ssmtp
 # 	2.2 add your SMTP server details to /etc/ssmtp/ssmtp.config
-# 	2.3 define sender addresses for user in /etc/ssmtp/revaliases 
+# 	2.3 define sender addresses for user in /etc/ssmtp/revaliases
 #
-# Parameters:
+# 3. define current runtime in variable
+# 	3.1 XPR_NET = MainNet | TestNet
+#
+# 4. enter your favorite server for calling the v1/chain/get_producer_schedule api
+# 	4.1 SERVER_URL_TESTNET
+#	4.2 SERVER_URL_MAINNET
+#
+# 5. change path of nodeos home dir (if this is not /opt/XPRMainNet/xprNode | /opt/XPRTestNet/xprNode)
+# 	5.1 NODEOS_DIR
+#
+# 6. define e-mail parameters
+# 	6.1 EMAIL_RECEIVER
+#	6.2 EMAIL_SENDER
+# 	6.3 EMAIL_SUBJECT
+#
+# Script Parameters:
 #   <parameter1> - test (if script is started in test mode, the restart of node will be skipped)
 #
 # Example:
@@ -60,9 +77,8 @@ RESTART_LOG_FILE="$NODEOS_DIR/restart_logfile.log"
 # temp file to generate outgoinfg mail body
 MAIL_TEMP_FILE="$NODEOS_DIR/restart_mail_tempfile.txt"
 
-### E-Mail parameters
+### e-mail parameters
 ## parameters to send e-mails in case of errors
-## 
 # receiver e-mail
 EMAIL_RECEIVER="rcv_mail@example.com"
 EMAIL_SENDER="rcv_mail@example.com"
