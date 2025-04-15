@@ -60,7 +60,7 @@
 ####################### start variable definition #######################
 
 ### set the network for which the Nodeos node works (TestNet | MainNet)
-XPR_NET=MainNet
+XPR_NET=NoNetDefined
 
 ### server endpoint for v1/chain/get_producer_schedule
 SERVER_URL_TESTNET="https://xpr-testnet-api.bloxprod.io"
@@ -127,8 +127,8 @@ elif  [ "$XPR_NET" = "TestNet" ]; then
 	echo "info: XPR_NET variable set to TestNet $(date)###" >> $RESTART_LOG_FILE
 	SERVER_URL="$SERVER_URL_TESTNET"
 else
-	echo "error: XPR_NET variable is neither set to MainNet nor to TestNet"
-	echo "error: XPR_NET variable set to TestNet $(date)###" >> $RESTART_LOG_FILE
+	echo "error: XPR_NET variable is neither set to MainNet nor to TestNet. Current value is $XPR_NET"
+	echo "error: XPR_NET variable is neither set to MainNet nor to TestNet. Current value is $XPR_NET $(date)###" >> $RESTART_LOG_FILE
 	exit 0
 fi
 
