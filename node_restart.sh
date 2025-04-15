@@ -10,7 +10,8 @@
 #
 # Description:
 # This script is restarts XPR block producer (nodeos node) in a main or test network.
-# Its primary function is to ensure that the nodeos service of configured block producer is not interupted during block producing
+# Its primary function is to ensure that the nodeos service of configured block producer is not interupted during block producing.
+# The name of the block producer is read from the producer-name element of the node node's config file
 # --------------------------------------
 # change log
 # v0.9 - 2025-04-01 - initial version
@@ -91,8 +92,16 @@ EMAIL_SUBJECT="error on $XPR_NET with BP $LOCAL_PRODUCER"
 
 
 echo "##############################################"
+
 # local block producer name
 LOCAL_PRODUCER=$(grep -E "producer-name\s*=" "$NODEOS_CONFIG_FILE" | cut -d '=' -f2 | tr -d ' ')
+
+# check if LOCAL_PRODUCER is empty
+if [ -z "$LOCAL_PRODUCER" ]; then
+	echo "error: name of block prodcer not found in $NODEOS_CONFIG_FILE"
+	echo "error###name of block prodcer not found in $NODEOS_CONFIG_FILE" $(date)###" >> $RESTART_LOG_FILE
+	exit 1
+fi
 
 # check if a script parameter was used
 if [ $# -eq 0 ]; then
@@ -105,7 +114,7 @@ elif [ "$1" = "test" ]; then
 	echo "info###RESTART_FLAG set to FALSE $(date)###" >> $RESTART_LOG_FILE
 else
 	echo "error: undefinded parameter "$1" found"
-	echo "info###undefinded parameter "$1" found $(date)###" >> $RESTART_LOG_FILE
+	echo "error###undefinded parameter "$1" found $(date)###" >> $RESTART_LOG_FILE
 	exit 1
 fi
 
