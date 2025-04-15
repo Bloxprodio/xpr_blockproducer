@@ -3,7 +3,7 @@
 ################################################################################
 # XPR Network node restart by Bloxprod.io
 ################################################################################
-# Script Name: example_script.sh
+# Script Name: node_restart.sh
 # Version: v0.9.2
 # Author: bloxprod.io
 # Date: 2025-04-15
