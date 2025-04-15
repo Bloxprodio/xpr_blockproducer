@@ -89,9 +89,12 @@ EMAIL_SUBJECT="error on $XPR_NET with BP $LOCAL_PRODUCER"
 ####################### end variable definition #######################
 
 
-
-
 echo "##############################################"
+
+if [ ! -f "$NODEOS_CONFIG_FILE" ]; then
+	echo "error: NODEOS_CONFIG_FILE doesn't exists: $NODEOS_CONFIG_FILE"
+	exit 1
+fi
 
 # local block producer name
 LOCAL_PRODUCER=$(grep -E "producer-name\s*=" "$NODEOS_CONFIG_FILE" | cut -d '=' -f2 | tr -d ' ')
