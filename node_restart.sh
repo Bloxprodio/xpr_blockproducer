@@ -4,18 +4,18 @@
 # XPR Network node restart by Bloxprod.io
 ################################################################################
 # Script Name: example_script.sh
-# Version: v0.9.1
+# Version: v0.9.2
 # Author: bloxprod.io
-# Date: 2025-04-14
+# Date: 2025-04-15
 #
 # Description:
 # This script is restarts XPR block producer (nodeos node) in a main or test network.
-# Its main function is to ensure that the nodeos service (block producer) can be restarted while it is not in block production.
+# Its primary function is to ensure that the nodeos service of configured block producer is not interupted during block producing
 # --------------------------------------
 # change log
 # v0.9 - 2025-04-01 - initial version
 # v0.9.1 - 2025-04-14 - comment changes
-#
+# v0.9.2 - 2025-04-15 - checkup for start timestamp implemented
 # --------------------------------------
 # Usage:
 # ./node_restart.sh <parameter1>
@@ -51,7 +51,7 @@
 # Example:
 # ./node_restart.sh test
 #
-# 
+# before starting script, check values and settings of section "variable definition"
 ################################################################################
 
 
@@ -76,6 +76,7 @@ NODEOS_LOG_FILE="$NODEOS_DIR/stderr.txt"
 RESTART_LOG_FILE="$NODEOS_DIR/restart_logfile.log"
 # temp file to generate outgoinfg mail body
 MAIL_TEMP_FILE="$NODEOS_DIR/restart_mail_tempfile.txt"
+
 
 ### e-mail parameters
 ## parameters to send e-mails in case of errors
@@ -213,8 +214,26 @@ while true
 
 		# set timestamp
 		CURRENT_TIME=$(date +%s)
+		
+		# find first entry of listening
 
-		# find last entry
+		FIRST_LISTEN_ENTRY=$(grep "start listening on" "$NODEOS_LOG_FILE" | head -n 1)
+
+		# extract timestamp from listening line
+		FIRST_LISTEN_TIME=$(echo "$FIRST_LISTEN_ENTRY" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}')
+
+		# ensure that timestamp was exttracted only once
+		FIRST_LISTEN_TIME=$(echo "$FIRST_LISTEN_TIME" | head -n 1)
+		
+		# set FIRST_LISTEN_TIME to current datetime if empty
+		if [ -z "$FIRST_LISTEN_TIME" ];then
+			FIRST_LISTEN_TIME=$(date +"%Y-%m-%dT%H:%M:%S.%3N")
+		fi
+		
+		# convert timestamp
+		FIRST_LISTEN_SECONDS=$(date -d "$FIRST_LISTEN_TIME" +%s)
+
+		# find last entry with search string
 		LAST_ENTRY=$(grep "$SEARCH_ENTRY" "$NODEOS_LOG_FILE" | tail -n 1)
 
 		# extract timestamp from last entry
@@ -222,19 +241,30 @@ while true
 		
 		# ensure that timestamp was exttracted only once
 		LAST_ENTRY_TIME=$(echo "$LAST_ENTRY_TIME" | head -n 1)
+		
+		# set LAST_ENTRY_TIME to current datetime if empty
+		if [ -z "$LAST_ENTRY_TIME" ];then
+			LAST_ENTRY_TIME=$(date +"%Y-%m-%dT%H:%M:%S.%3N")
+		fi
 
 		# convert timestamp
 		LAST_ENTRY_SECONDS=$(date -d "$LAST_ENTRY_TIME" +%s)
-	
+
+		
+
+
 		# calc timestamp diff
-		TIME_DIFF=$((CURRENT_TIME - LAST_ENTRY_SECONDS))
+		TIME_DIFF_START=$((CURRENT_TIME - FIRST_LISTEN_SECONDS))
+		
+		# calc timestamp diff
+		TIME_DIFF_SUCCESSOR=$((CURRENT_TIME - LAST_ENTRY_SECONDS))
 		
 		LAST_SIGNED_BY=$(grep "signed by" "$NODEOS_LOG_FILE" | tail -n 1 | sed -E 's/.*signed by ([^ ]+).*/\1/')
 
 		# check if timestamp diff is less than 20 secs and greater than 5 secs. If so, local BP can be restarted
-		if [ "$TIME_DIFF" -le 20 ] && [ "$TIME_DIFF" -gt 5 ]; then
+		if [ "$TIME_DIFF_SUCCESSOR" -le 20 ] && [ "$TIME_DIFF_SUCCESSOR" -gt 5 ]; then
 
-			echo "info: last production date of BP successor $next_blockproducer was $TIME_DIFF secs ago."
+			echo "info: last production date of BP successor $next_blockproducer was $TIME_DIFF_START secs ago."
 			echo "info: seems to be safe to restart BP $current_blockproducer"
 			echo "info: restart initiated"
 			echo "info###restart initiated:$(date +%s)### $response" >> $RESTART_LOG_FILE
@@ -252,8 +282,10 @@ while true
 				exit 0
 			fi
 
-		# exit script because sucessor has not appeared for 300 secs
-		elif [ "$TIME_DIFF" -gt 300 ]; then
+		# exit script because sucessor has not appeared for 200 secs and node is running longer than 300 secs
+		elif [ "$TIME_DIFF_SUCCESSOR" -gt 200 ] && [ "$TIME_DIFF_START" -gt 300 ]; then
+			echo "TIME_DIFF_START $TIME_DIFF_START"
+			echo "TIME_DIFF_SUCCESSOR $TIME_DIFF_SUCCESSOR"
 			echo "error: exiting script because sucessor $next_blockproducer has not appeared for 300 secs in node logs"
 			echo "error: please check if BPs where rescheduled or removed from scheduling (v1/chain/get_producer_schedule)"
 			echo "error###restart initiated:$(date +%s)### exiting script because sucessor $next_blockproducer has not appeared for 300 secs in node logs" >> $RESTART_LOG_FILE
@@ -264,10 +296,10 @@ while true
 		# wait for BP restart
 		else
 			echo "current BP is $LAST_SIGNED_BY"
-			echo "last production date of BP successor $next_blockproducer was $TIME_DIFF secs ago"
+			echo "node was restarted  $TIME_DIFF_START secs ago"
+			echo "last production date of BP successor $next_blockproducer was $TIME_DIFF_SUCCESSOR secs ago"
 			echo "restart of BP $current_blockproducer is pending..." #$LAST_ENTRY
 			echo ""
 			sleep 1
 		fi
 	done
-
