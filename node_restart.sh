@@ -4,9 +4,9 @@
 # XPR Network node restart by Bloxprod.io
 ################################################################################
 # Script Name: node_restart.sh
-# Version: v0.9.2
+# Version: v0.9.4
 # Author: bloxprod.io
-# Date: 2025-04-15
+# Date: 2025-04-16
 #
 # Description:
 # This script is restarts XPR block producer (nodeos node) in a main or test network.
@@ -17,6 +17,7 @@
 # v0.9 - 2025-04-01 - initial version
 # v0.9.1 - 2025-04-14 - comment changes
 # v0.9.2 - 2025-04-15 - checkup for start timestamp implemented
+# v0.9.4 - 2025-04-16 - send-mail flag and log changes 
 # --------------------------------------
 # Usage:
 # ./node_restart.sh <parameter1>
@@ -42,9 +43,10 @@
 # 	5.1 NODEOS_DIR
 #
 # 6. define e-mail parameters
-# 	6.1 EMAIL_RECEIVER
-#	6.2 EMAIL_SENDER
-# 	6.3 EMAIL_SUBJECT
+#	6.1 SEND_EMAIL ( true | false )
+# 	6.2 EMAIL_RECEIVER
+#	6.3 EMAIL_SENDER
+# 	6.4 EMAIL_SUBJECT
 #
 # Script Parameters:
 #   <parameter1> - test (if script is started in test mode, the restart of node will be skipped)
@@ -60,7 +62,7 @@
 ####################### start variable definition #######################
 
 ### set the network for which the Nodeos node works (TestNet | MainNet)
-XPR_NET=NoNetDefined
+XPR_NET=TestNet
 
 ### server endpoint for v1/chain/get_producer_schedule
 SERVER_URL_TESTNET="https://xpr-testnet-api.bloxprod.io"
@@ -81,9 +83,13 @@ MAIL_TEMP_FILE="$NODEOS_DIR/restart_mail_tempfile.txt"
 
 ### e-mail parameters
 ## parameters to send e-mails in case of errors
+# send e-mail in case of error( true | false )
+SEND_EMAIL = true
 # receiver e-mail
 EMAIL_RECEIVER="rcv_mail@example.com"
+# sender e-mail
 EMAIL_SENDER="rcv_mail@example.com"
+# e-mail subject
 EMAIL_SUBJECT="error on $XPR_NET with BP $LOCAL_PRODUCER"
 
 ####################### end variable definition #######################
@@ -101,37 +107,37 @@ LOCAL_PRODUCER=$(grep -E "producer-name\s*=" "$NODEOS_CONFIG_FILE" | cut -d '=' 
 
 # check if LOCAL_PRODUCER is empty
 if [ -z "$LOCAL_PRODUCER" ]; then
-	echo "error: name of block producer not found in $NODEOS_CONFIG_FILE"
-	echo "error: name of block producer not found in $NODEOS_CONFIG_FILE $(date) ###" >> $RESTART_LOG_FILE
+	echo "$(date):error: name of block producer not found in $NODEOS_CONFIG_FILE"
+	echo "$(date):error: name of block producer not found in $NODEOS_CONFIG_FILE ###" >> $RESTART_LOG_FILE
 	exit 1
 fi
 
 # check if a script parameter was used
 if [ $# -eq 0 ]; then
     RESTART_FLAG=true
-	echo "info: RESTART_FLAG set to TRUE"
-	echo "info: RESTART_FLAG set to TRUE $(date)###" >> $RESTART_LOG_FILE
+	echo "$(date):info: RESTART_FLAG set to TRUE"
+	echo "$(date):info: RESTART_FLAG set to TRUE###" >> $RESTART_LOG_FILE
 elif [ "$1" = "test" ]; then
 	RESTART_FLAG=false
-	echo "info: RESTART_FLAG set to FALSE"
-	echo "info: RESTART_FLAG set to FALSE $(date)###" >> $RESTART_LOG_FILE
+	echo "$(date):info: RESTART_FLAG set to FALSE"
+	echo "$(date):info: RESTART_FLAG set to FALSE ###" >> $RESTART_LOG_FILE
 else
-	echo "error: undefinded parameter "$1" found"
-	echo "error: undefinded parameter "$1" found $(date)###" >> $RESTART_LOG_FILE
+	echo "$(date):error: undefinded parameter "$1" found"
+	echo "$(date):error: undefinded parameter "$1" found ###" >> $RESTART_LOG_FILE
 	exit 1
 fi
 
 if [ "$XPR_NET" = "MainNet" ]; then
-	echo "info: XPR_NET variable set to MainNet"
-	echo "info: XPR_NET variable set to MainNet $(date)###" >> $RESTART_LOG_FILE
+	echo "$(date):info: XPR_NET variable set to MainNet"
+	echo "$(date):info: XPR_NET variable set to MainNet ###" >> $RESTART_LOG_FILE
 	SERVER_URL="$SERVER_URL_MAINNET"
 elif  [ "$XPR_NET" = "TestNet" ]; then
-	echo "info: XPR_NET variable set to TestNet"
-	echo "info: XPR_NET variable set to TestNet $(date)###" >> $RESTART_LOG_FILE
+	echo "$(date):info: XPR_NET variable set to TestNet"
+	echo "$(date):info: XPR_NET variable set to TestNet ###" >> $RESTART_LOG_FILE
 	SERVER_URL="$SERVER_URL_TESTNET"
 else
-	echo "error: XPR_NET variable is neither set to MainNet nor to TestNet. Current value is $XPR_NET"
-	echo "error: XPR_NET variable is neither set to MainNet nor to TestNet. Current value is $XPR_NET $(date)###" >> $RESTART_LOG_FILE
+	echo "$(date):error: XPR_NET variable is neither set to MainNet nor to TestNet. Current value is $XPR_NET"
+	echo "$(date):error: XPR_NET variable is neither set to MainNet nor to TestNet. Current value is $XPR_NET ###" >> $RESTART_LOG_FILE
 	exit 0
 fi
 
@@ -147,15 +153,19 @@ if echo "$response" | jq '.active? // empty' > /dev/null; then
 	if [ "$key_count" -eq 21 ]; then
 		echo "info: json response of get_producer_schedule is valid"
 	else
-		echo "error: the key element was not found 21 times in JSON response.\n\n Please check get_producer_schedule response: \n\n $response" >> $RESTART_LOG_FILE
+		echo "$(date):error: the key element was not found 21 times in JSON response.\n\n Please check get_producer_schedule response: \n\n $response" >> $RESTART_LOG_FILE
+		if [ SEND_EMAIL = true ]; then
 		echo -e "To: $EMAIL_SENDER\nSubject: $EMAIL_SUBJECT \n\n the key element was not found 21 times in JSON response.\n\n Please check get_producer_schedule response: \n\n $response" > $MAIL_TEMP_FILE
 		ssmtp -v $EMAIL_RECEIVER < $MAIL_TEMP_FILE
+		fi
 		exit 1
 	fi
 else
-    	echo "error: the action element was not found in JSON response.\n\n Please check get_producer_schedule response: \n\n $response" >> $RESTART_LOG_FILE
+    	echo "$(date):error: the action element was not found in JSON response.\n\n Please check get_producer_schedule response: \n\n $response" >> $RESTART_LOG_FILE
+		if [ SEND_EMAIL = true ]; then
 		echo -e "To: $EMAIL_SENDER\nSubject: $EMAIL_SUBJECT \n\n the action element was not found in JSON response.\n\n Please check get_producer_schedule response: \n\n $response" > $MAIL_TEMP_FILE
 		ssmtp -v $EMAIL_RECEIVER < $MAIL_TEMP_FILE
+		fi
 		exit 1
 fi
 
@@ -170,20 +180,20 @@ current_index=$(echo "$blockproducers" | grep -n "$LOCAL_PRODUCER" | cut -d: -f1
 
 # If the current producer was not found, we assume that our block producer is out of schedule
 if [ -z "$current_index" ]; then
-		echo "info: BP $LOCAL_PRODUCER not found in $XPR_NET schedule"
-		echo "info: seems to be safe to restart BP $LOCAL_PRODUCER without checking producing dependencies"
-		echo "info: restart initiated:$(date) ### $response" >> $RESTART_LOG_FILE
+		echo "$(date):info: BP $LOCAL_PRODUCER not found in $XPR_NET schedule"
+		echo "$(date):info: seems to be safe to restart BP $LOCAL_PRODUCER without checking producing dependencies"
+		echo "$(date):info: restart initiated: ### $response" >> $RESTART_LOG_FILE
    		if [ "$RESTART_FLAG" = "true" ]; then
-			echo "info: restart initiated"
+			echo "$(date):info: restart initiated"
 			$NODEOS_DIR/stop.sh
 			$NODEOS_DIR/start.sh
-			echo "info: restart finshed:$(date)### $response" >> $RESTART_LOG_FILE
-			echo "info: BP $LOCAL_PRODUCER restarted"   			
+			echo "$(date):info: restart finshed: ### $response" >> $RESTART_LOG_FILE
+			echo "$(date):info: BP $LOCAL_PRODUCER restarted"   			
 			exit 0
 		else
-			echo "info: RESTART_FLAG=false - no restart initiated"
-			echo "info: RESTART_FLAG=false - no restart initiated:(date) ### $response" >> $RESTART_LOG_FILE
-			echo "info: RESTART_FLAG=false - BP $LOCAL_PRODUCER not restarted"   	
+			echo "$(date):info: RESTART_FLAG=false - no restart initiated"
+			echo "$(date):info: RESTART_FLAG=false - no restart initiated: ### $response" >> $RESTART_LOG_FILE
+			echo "$(date):info: RESTART_FLAG=false - BP $LOCAL_PRODUCER not restarted"   	
 			exit 0
 		fi
 		
@@ -203,17 +213,19 @@ next_blockproducer=$(echo "$blockproducers" | sed -n "${next_index}p")
 next_blockproducer="${next_blockproducer%\"}"
 next_blockproducer="${next_blockproducer#\"}"
 
-echo "info: local BP in schedule found: $current_blockproducer"
+echo "$(date):info: local BP in schedule found: $current_blockproducer"
 
 # if successor producer is empty was not found for any reason, send an error e-mail and exit script
 if [ -z "$next_blockproducer" ]; then
-	echo "error: the variable next_blockproducer was emtpty.\n\n Please check$response" >> $RESTART_LOG_FILE
- 	echo -e "To: $EMAIL_SENDER\nSubject: $EMAIL_SUBJECT \n\n $response" > $MAIL_TEMP_FILE
+	echo "$(date):error: the variable next_blockproducer was emtpty.\n\n Please check$response" >> $RESTART_LOG_FILE
+ 	if [ SEND_EMAIL = true ]; then
+	echo -e "To: $EMAIL_SENDER\nSubject: $EMAIL_SUBJECT \n\n $response" > $MAIL_TEMP_FILE
 	ssmtp -v $EMAIL_RECEIVER < $MAIL_TEMP_FILE
+	fi
 	exit 1
 fi
 
-echo "info: BP successor in schedule found: $next_blockproducer"
+echo "$(date):info: BP successor in schedule found: $next_blockproducer"
 
 # create search string
 SEARCH_ENTRY="signed by $next_blockproducer"
@@ -275,39 +287,41 @@ while true
 
 		# check if timestamp diff is less than 20 secs and greater than 5 secs. If so, local BP can be restarted
 		if [ "$TIME_DIFF_SUCCESSOR" -le 20 ] && [ "$TIME_DIFF_SUCCESSOR" -gt 5 ]; then
-
-			echo "info: last production date of BP successor $next_blockproducer was $TIME_DIFF_START secs ago."
-			echo "info: seems to be safe to restart BP $current_blockproducer"
+			echo "$(date):info: node was restarted $TIME_DIFF_START secs ago"
+			echo "$(date):info: last production date of BP successor $next_blockproducer was $TIME_DIFF_SUCCESSOR secs ago"
+			echo "$(date):info: seems to be safe to restart BP $current_blockproducer"
 			if [ "$RESTART_FLAG" = true ]; then
-				echo "info: restart initiated:$(date)### $response" >> $RESTART_LOG_FILE
-				echo "info: restart initiated"
+				echo "$(date):info: restart initiated: ### $response" >> $RESTART_LOG_FILE
+				echo "$(date):info: restart initiated"
 				$NODEOS_DIR/stop.sh
 				$NODEOS_DIR/start.sh
-				echo "info: restart finshed:$(date)### $response" >> $RESTART_LOG_FILE
-				echo "info: BP $LOCAL_PRODUCER restarted"   			
+				echo "$(date):info: restart finshed: ### $response" >> $RESTART_LOG_FILE
+				echo "$(date):info: BP $LOCAL_PRODUCER restarted"   			
 				exit 0
 			else
-				echo "info: RESTART_FLAG=false - no restart initiated"
-				echo "info: RESTART_FLAG=false - no restart initiated:(date)### $response" >> $RESTART_LOG_FILE
-				echo "info: RESTART_FLAG=false - BP $LOCAL_PRODUCER not restarted"   	
+				echo "$(date):info: RESTART_FLAG=false - no restart initiated"
+				echo "$(date):info: RESTART_FLAG=false - no restart initiated: ### $response" >> $RESTART_LOG_FILE
+				echo "$(date):info: RESTART_FLAG=false - BP $LOCAL_PRODUCER not restarted"   	
 				exit 0
 			fi
 
 		# exit script because sucessor has not appeared for 200 secs and node is running longer than 300 secs
 		elif [ "$TIME_DIFF_SUCCESSOR" -gt 200 ] && [ "$TIME_DIFF_START" -gt 300 ]; then
-			echo "error: exiting script because sucessor $next_blockproducer has not appeared for 300 secs in node logs"
-			echo "error: please check if BPs where rescheduled or removed from scheduling (v1/chain/get_producer_schedule)"
-			echo "error: restart initiated:$(date)### exiting script because sucessor $next_blockproducer has not appeared for 300 secs in node logs" >> $RESTART_LOG_FILE
+			echo "$(date):error: exiting script because sucessor $next_blockproducer has not appeared for 300 secs in node logs"
+			echo "$(date):error: please check if BPs where rescheduled or removed from scheduling (v1/chain/get_producer_schedule)"
+			echo "$(date):error: restart initiated: ### exiting script because sucessor $next_blockproducer has not appeared for 300 secs in node logs" >> $RESTART_LOG_FILE
+			if [ SEND_EMAIL = true ]; then
 			echo -e "To: $EMAIL_SENDER\nSubject: $EMAIL_SUBJECT \n\n exiting script because sucessor $next_blockproducer has not appeared for 300 secs in node logs.\n\n Please check v1/chain/get_producer_schedule" > $MAIL_TEMP_FILE
 			ssmtp -v $EMAIL_RECEIVER < $MAIL_TEMP_FILE
+			fi
 			exit 1
 		
 		# wait for BP restart
 		else
-			echo "info: current BP is $LAST_SIGNED_BY"
-			echo "info: node was restarted $TIME_DIFF_START secs ago"
-			echo "info: last production date of BP successor $next_blockproducer was $TIME_DIFF_SUCCESSOR secs ago"
-			echo "info: restart of BP $current_blockproducer is pending..." #$LAST_ENTRY
+			echo "$(date):info: current BP is $LAST_SIGNED_BY"
+			echo "$(date):info: node was restarted $TIME_DIFF_START secs ago"
+			echo "$(date):info: last production date of BP successor $next_blockproducer was $TIME_DIFF_SUCCESSOR secs ago"
+			echo "$(date):info: restart of BP $current_blockproducer is pending..." #$LAST_ENTRY
 			echo "############"
 			sleep 1
 		fi
