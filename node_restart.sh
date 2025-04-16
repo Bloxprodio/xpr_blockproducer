@@ -84,7 +84,7 @@ MAIL_TEMP_FILE="$NODEOS_DIR/restart_mail_tempfile.txt"
 ### e-mail parameters
 ## parameters to send e-mails in case of errors
 # send e-mail in case of error( true | false )
-SEND_EMAIL = true
+SEND_EMAIL=true
 # receiver e-mail
 EMAIL_RECEIVER="rcv_mail@example.com"
 # sender e-mail
