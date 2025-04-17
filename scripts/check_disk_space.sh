@@ -23,8 +23,8 @@
 # Dependencies:
 # 1. install and configure ssmtp
 # 	1.1 apt install ssmtp
-# 	1.2 add your SMTP server details to /etc/ssmtp/ssmtp.config
-# 	1.3 define sender addresses for user in /etc/ssmtp/revaliases
+# 	1.2 add your SMTP server details to /etc/ssmtp/ssmtp.config (see example in rep)
+# 	1.3 define sender addresses for user in /etc/ssmtp/revaliases (see example in rep)
 #
 #
 # 5. change path of nodeos home dir (if this is not /opt/XPRMainNet/xprNode | /opt/XPRTestNet/xprNode)
