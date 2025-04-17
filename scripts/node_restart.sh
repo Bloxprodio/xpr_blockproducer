@@ -29,8 +29,8 @@
 #
 # 2. install and configure ssmtp
 # 	2.1 apt install ssmtp
-# 	2.2 add your SMTP server details to /etc/ssmtp/ssmtp.config
-# 	2.3 define sender addresses for user in /etc/ssmtp/revaliases
+# 	2.2 add your SMTP server details to /etc/ssmtp/ssmtp.config (see example in rep)
+# 	2.3 define sender addresses for user in /etc/ssmtp/revaliases (see example in rep)
 #
 # 3. define current runtime in variable
 # 	3.1 XPR_NET = MainNet | TestNet
