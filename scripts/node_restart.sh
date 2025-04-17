@@ -32,21 +32,24 @@
 # 	2.2 add your SMTP server details to /etc/ssmtp/ssmtp.config (see example in rep)
 # 	2.3 define sender addresses for user in /etc/ssmtp/revaliases (see example in rep)
 #
-# 3. define current runtime in variable
-# 	3.1 XPR_NET = MainNet | TestNet
+# 3. install jq utility ( to parse and manipulate JSON data)
+# 	3.1 apt install jq
 #
-# 4. enter your favorite server for calling the v1/chain/get_producer_schedule api
-# 	4.1 SERVER_URL_TESTNET
-#	4.2 SERVER_URL_MAINNET
+# 4. define current runtime in variable
+# 	4.1 XPR_NET = MainNet | TestNet
 #
-# 5. change path of nodeos home dir (if this is not /opt/XPRMainNet/xprNode | /opt/XPRTestNet/xprNode)
-# 	5.1 NODEOS_DIR
+# 5. enter your favorite server for calling the v1/chain/get_producer_schedule api
+# 	5.1 SERVER_URL_TESTNET
+#	5.2 SERVER_URL_MAINNET
 #
-# 6. define e-mail parameters
-#	6.1 SEND_EMAIL ( true | false )
-# 	6.2 EMAIL_RECEIVER
-#	6.3 EMAIL_SENDER
-# 	6.4 EMAIL_SUBJECT
+# 6. change path of nodeos home dir (if this is not /opt/XPRMainNet/xprNode | /opt/XPRTestNet/xprNode)
+# 	6.1 NODEOS_DIR
+#
+# 7. define e-mail parameters
+#	7.1 SEND_EMAIL ( true | false )
+# 	7.2 EMAIL_RECEIVER
+#	7.3 EMAIL_SENDER
+# 	7.4 EMAIL_SUBJECT
 #
 # Script Parameters:
 #   <parameter1> - test (if script is started in test mode, the restart of node will be skipped)
