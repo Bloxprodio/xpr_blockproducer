@@ -59,7 +59,7 @@ SNAPSHOT_LOG_FILE="$NODEOS_DIR/snapshot_logfile.log"
 
 
 ### server endpoint for /v1/producer/create_snapshot
-SERVER_URL_PRODUCER_API="http://api.bloxprodio:8817"
+SERVER_URL_PRODUCER_API="http://localhost:8888"
 
 ####################### end variable definition #######################
 
