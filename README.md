@@ -9,6 +9,7 @@ This script monitors disk usage on a Linux server, logs the current status, and 
 
 ## create_snapshot.sh
 IMPORTANT: YOU MUST NOT RUN A PUBLICLY ACCESSIBLE PRODUCER API ON A BLOCK PRODUCER NODE.
+
 This script performs a snapshot creation for a Nodeos node. 
 It requests a snapshot creation via the curl command and logs the activity in a log file.
 The script analyzes the JSON response from the server to verify if the head_block_id field is present, indicating a successful snapshot creation.
