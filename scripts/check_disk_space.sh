@@ -108,7 +108,7 @@ echo "#######################" >> $DF_HISTORY_FILE
 while read -r line; do
   device=$(echo $line | awk '{print $1}')  # Extract the device name
   current_use=$(echo $line | awk '{print $2}' | tr -d '%')  # Extract current usage percentage
-  previous_use=$(grep $device df_history.txt | tail -n 2 | head -n 1 | awk '{print $2}' | tr -d '%')  # Extract previous usage percentage
+  previous_use=$(grep $device $DF_HISTORY_FILE | tail -n 2 | head -n 1 | awk '{print $2}' | tr -d '%')  # Extract previous usage percentage
 
   if [ -n "$previous_use" ]; then
     use_change=$(($current_use - $previous_use))  # Calculate the change in usage
